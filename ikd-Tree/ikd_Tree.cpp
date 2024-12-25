@@ -7,22 +7,47 @@ email: yixicai@connect.hku.hk
 */
 
 template <typename PointType>
+// 构造函数：初始化KD树对象
+/**
+ * @param delete_param 删除节点的参数，用于控制树的删除操作
+ * @param balance_param 平衡树的参数，用于控制树的平衡程度
+ * @param box_length 下采样框的长度，用于控制点云数据的下采样程度
+ * 
+ * 初始化KD树对象，设置删除和平衡参数，以及下采样长度。
+ * 它还负责启动重建日志记录和设置终止标志为假，以准备进行KD树的构建和操作。
+ */
 KD_TREE<PointType>::KD_TREE(float delete_param, float balance_param, float box_length) {
+    // 设置删除节点的参数
     delete_criterion_param = delete_param;
+    // 设置平衡树的参数
     balance_criterion_param = balance_param;
+    // 设置下采样框的长度
     downsample_size = box_length;
+    // 清空重建日志记录，准备新的日志记录
     Rebuild_Logger.clear();           
+    // 设置终止标志为假，表示KD树操作可以继续
     termination_flag = false;
+    // 启动线程，准备进行KD树的构建和操作
     start_thread();
 }
 
 template <typename PointType>
+// 析构函数，用于清理和释放KD树占用的资源
 KD_TREE<PointType>::~KD_TREE()
 {
+    // 停止任何可能正在运行的线程
     stop_thread();
+    
+    // 禁止存储空间的删除操作，以避免在删除树节点时发生错误
     Delete_Storage_Disabled = true;
+    
+    // 递归删除所有树节点，释放内存
     delete_tree_nodes(&Root_Node);
+    
+    // 交换点云存储空间，以释放之前分配的内存
     PointVector ().swap(PCL_Storage);
+    
+    // 清空日志记录器，释放相关资源
     Rebuild_Logger.clear();           
 }
 
